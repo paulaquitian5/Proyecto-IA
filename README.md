@@ -1,108 +1,174 @@
-Taller: Implementación con Google Gemini API
+## Autores
 
-Curso: Desarrollo de Aplicaciones con IA
-Librería utilizada: google-genai
-Lenguaje: Python
+Proyecto desarrollado por:
 
-Descripción General
+**María Paula Rodríguez Quitián**
+Código: 506231715
 
-Este proyecto implementa tres ejercicios prácticos utilizando la API de Google Gemini mediante la librería google-genai.
+**Laura Alejandra Barreto Niño**
+Código: 506222707
 
-El objetivo es demostrar:
+# Tutor Socrático de Bases de Datos
 
-Conexión segura a la API.
+## Descripción del Proyecto
 
-Procesamiento inteligente de textos con roles definidos.
+Este proyecto implementa un **Asistente Académico basado en Inteligencia Artificial** que funciona como un **Tutor Socrático de Bases de Datos**.
 
-Gestión de conversaciones interactivas con historial (Few-Shot Learning).
+El sistema utiliza un modelo de IA para guiar al estudiante en el aprendizaje de conceptos de bases de datos y SQL mediante preguntas y ejemplos, en lugar de proporcionar respuestas directas.
 
-Instalación y Configuración
-1️.Clonar el repositorio
+El asistente analiza preguntas teóricas y consultas SQL, ayudando al estudiante a identificar errores o comprender conceptos de manera guiada.
 
-2️.Crear entorno virtual (Opcional)
-python -m venv venv
-venv\Scripts\activate
+---
 
-3️.Instalar dependencias
-pip install google-genai python-dotenv
+## Objetivo del Asistente
 
-4️.Configurar API Key
+El objetivo del sistema es apoyar el aprendizaje de bases de datos mediante:
 
-Crear un archivo .env en la raíz del proyecto
+* Explicaciones basadas en ejemplos del mundo real
+* Preguntas guiadas para fomentar el pensamiento crítico
+* Análisis de consultas SQL
+* Respuestas estructuradas para facilitar el aprendizaje
 
-Ejercicio 1: Conexión y Petición Básica (20%)
-Objetivo
+---
 
-Inicializar el cliente de Gemini y realizar una consulta simple donde el modelo explique qué es la inferencia en IA en menos de 50 palabras.
+## Tecnologías Utilizadas
 
-Implementación
+* **Python**
+* **Google Gemini API**
+* **python-dotenv**
+* **Prompt Engineering**
 
-Se carga la API Key desde .env.
+---
 
-Se inicializa el cliente con genai.Client.
+## Diseño del Prompt
 
-Se define una system_instruction para limitar la respuesta a menos de 50 palabras.
+El sistema utiliza **Prompt Engineering** para controlar el comportamiento del modelo de inteligencia artificial.
 
-Se utiliza client.models.generate_content() para generar la respuesta.
+El *System Prompt* define:
 
-Evidencia de ejecución
+* El **rol del asistente** (Tutor Socrático de Bases de Datos)
+* Las **reglas de interacción**
+* El **formato de salida**
+* Ejemplos de interacción mediante **Few-Shot Prompting**
 
-Agregar aquí la captura de pantalla del resultado en consola:
+Se utilizan **delimitadores estructurados** para organizar el prompt:
 
-![Ejercicio 1](ejercicio1.png)
+```
+<rol>
+<reglas>
+<formato_respuesta>
+<ejemplos>
+```
 
-Ejercicio 2: Procesador de Textos Inteligente (30%)
-Objetivo
+Esto permite separar claramente:
 
-Desarrollar un sistema que procese textos según una tarea indicada:
+* Instrucciones del sistema
+* Ejemplos de uso
+* Estructura de las respuestas
 
-resumir → Genera un resumen ejecutivo.
+---
 
-profesionalizar → Reescribe el texto con tono formal y técnico.
+## Few-Shot Prompting
 
-Implementación
+Se incluyeron ejemplos dentro del prompt para guiar al modelo sobre cómo debe responder.
 
-Se define la IA como un "Editor Editorial de prestigio" usando system_instruction.
+Ejemplo incluido en el prompt:
 
-El usuario ingresa la tarea y el texto.
+Pregunta:
+¿Qué hace SELECT * FROM clientes?
 
-El prompt se construye dinámicamente.
+Respuesta esperada:
 
-Se genera la respuesta con generate_content().
+### Explicación
 
-Evidencia de ejecución
-![Ejercicio 2](ejercicio2.png)
+Imagina una base de datos de una tienda con una tabla llamada clientes.
 
-Ejercicio 3: Chat de Soporte con Historial (Few-Shot) (50%)
-Objetivo
+### Preguntas para pensar
 
-Construir un sistema de chat interactivo para una tienda de tecnología.
+* ¿Qué columnas podría tener esa tabla?
+* ¿Qué significa el símbolo * en SQL?
+* ¿Crees que esta consulta devuelve todas las columnas o solo algunas?
 
-Características implementadas
-Rol del sistema
+Esto ayuda al modelo a mantener un **estilo consistente en las respuestas**.
 
-Se define a la IA como:
+---
 
-Vendedor amable de una tienda de tecnología.
+## Funcionamiento del Sistema
 
-Contexto Few-Shot
+El sistema funciona de la siguiente manera:
 
-Se precarga el historial (history) con dos ejemplos:
+1. El usuario ingresa una pregunta en la terminal.
+2. El programa analiza si el mensaje contiene código SQL o una pregunta teórica.
+3. La pregunta se envía al modelo de inteligencia artificial.
+4. El modelo genera una respuesta siguiendo las reglas del tutor socrático.
+5. La respuesta se muestra en la terminal en formato Markdown.
 
-Pregunta sobre un producto.
+---
 
-Respuesta con especificaciones técnicas.
+## Estructura del Proyecto
 
-Esto permite que el modelo mantenga coherencia en estilo y formato.
+```
+taller/
+│
+├── app.py
+├── .env
+├── requirements.txt
+├── README.md
+└── Evidencias.pdf
+```
 
-Bucle interactivo
+---
 
-El usuario puede hacer múltiples preguntas.
+## Instalación
 
-El chat termina cuando se escribe "finalizar".
+Instalar las dependencias necesarias:
 
-Se mantiene memoria conversacional usando client.chats.create().
+```
+pip install -r requirements.txt
+```
 
-Evidencia de ejecución
-![Ejercicio 3](ejercicio3.png)
-estudiante: maria paula rodriguez quitian
+Crear un archivo `.env` con la API Key:
+
+```
+GEMINI_API_KEY=tu_api_key
+```
+
+---
+
+## Ejecución del Proyecto
+
+Para ejecutar el asistente:
+
+```
+python app.py
+```
+
+El sistema iniciará un tutor interactivo en la terminal.
+
+Para finalizar la conversación escribir:
+
+```
+salir
+```
+
+---
+
+## Ejemplo de Interacción
+
+**Pregunta del estudiante**
+
+```
+SELECT * FROM clientes
+```
+
+**Respuesta del tutor**
+
+### Explicación
+
+Imagina que la tabla clientes es como una hoja de cálculo con información de clientes.
+
+### Preguntas para pensar
+
+* ¿Qué significa la palabra SELECT?
+* ¿Qué representa el símbolo * en SQL?
+* ¿Qué datos esperas ver como resultado?

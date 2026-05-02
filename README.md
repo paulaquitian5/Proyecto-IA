@@ -8,15 +8,17 @@ Código: 506231715
 **Laura Alejandra Barreto Niño**
 Código: 506222707
 
-# Tutor Socrático de Bases de Datos
+---
+
+# Tutor Socrático de Bases de Datos con RAG
 
 ## Descripción del Proyecto
 
-Este proyecto implementa un **Asistente Académico basado en Inteligencia Artificial** que funciona como un **Tutor Socrático de Bases de Datos**.
+Este proyecto implementa un **Asistente Académico basado en Inteligencia Artificial** que funciona como un **Tutor Socrático de Bases de Datos**, potenciado mediante una arquitectura **RAG (Retrieval-Augmented Generation)**.
 
-El sistema utiliza un modelo de IA para guiar al estudiante en el aprendizaje de conceptos de bases de datos y SQL mediante preguntas y ejemplos, en lugar de proporcionar respuestas directas.
+El sistema no solo genera respuestas con IA, sino que **consulta previamente una base documental especializada en Bases de Datos**, recuperando contexto relevante antes de responder. Esto mejora la precisión de las respuestas, reduce posibles alucinaciones del modelo y mantiene un enfoque académico guiado.
 
-El asistente analiza preguntas teóricas y consultas SQL, ayudando al estudiante a identificar errores o comprender conceptos de manera guiada.
+El asistente analiza preguntas teóricas y consultas SQL, ayudando al estudiante a comprender conceptos o identificar errores mediante preguntas orientadoras en lugar de entregar respuestas directas.
 
 ---
 
@@ -27,16 +29,21 @@ El objetivo del sistema es apoyar el aprendizaje de bases de datos mediante:
 * Explicaciones basadas en ejemplos del mundo real
 * Preguntas guiadas para fomentar el pensamiento crítico
 * Análisis de consultas SQL
+* Recuperación de conocimiento documental mediante RAG
 * Respuestas estructuradas para facilitar el aprendizaje
 
 ---
 
 ## Tecnologías Utilizadas
 
-* **Python**
-* **Google Gemini API**
-* **python-dotenv**
-* **Prompt Engineering**
+* Python
+* Google Gemini API
+* python-dotenv
+* Prompt Engineering
+* SentenceTransformers
+* ChromaDB
+* PyPDF
+* Arquitectura RAG (Retrieval-Augmented Generation)
 
 ---
 
@@ -48,48 +55,132 @@ El *System Prompt* define:
 
 * El **rol del asistente** (Tutor Socrático de Bases de Datos)
 * Las **reglas de interacción**
-* El **formato de salida**
-* Ejemplos de interacción mediante **Few-Shot Prompting**
+* El **uso prioritario del contexto recuperado por RAG**
+* El **formato estructurado de salida**
+* Ejemplos de interacción guiados mediante prompting
 
-Se utilizan **delimitadores estructurados** para organizar el prompt:
+Se utilizan delimitadores estructurados para organizar el prompt:
 
-```
+```text
 <rol>
+<contexto>
 <reglas>
 <formato_respuesta>
-<ejemplos>
 ```
+---
 
-Esto permite separar claramente:
+## Flujo RAG Implementado
 
-* Instrucciones del sistema
-* Ejemplos de uso
-* Estructura de las respuestas
+El sistema implementa una arquitectura **RAG (Retrieval-Augmented Generation)** para enriquecer las respuestas del tutor con información documental relevante.
+
+### 1) Selección documental
+
+Se recopilaron documentos académicos relacionados con:
+
+* SQL
+* JOINs
+* Normalización
+* Claves primarias y foráneas
+* Integridad referencial
+* Modelos relacionales
+* Optimización de consultas
+
+Estos documentos son almacenados localmente en la carpeta `/documentos`.
+
+---
+
+### 2) Chunking
+
+Los documentos son fragmentados en bloques de texto (**chunks**) de aproximadamente **500 caracteres**, con un solapamiento de **100 caracteres**.
+
+---
+
+### 3) Vectorización Semántica
+
+Cada chunk es convertido en un **embedding vectorial** utilizando el modelo:
+
+`all-MiniLM-L6-v2`
+
+Esto permite representar matemáticamente el significado semántico de cada fragmento documental.
+
+---
+
+### 4) Base Vectorial
+
+Los embeddings generados se almacenan localmente en una base vectorial usando **ChromaDB**.
+
+---
+
+### 5) Recuperación de Contexto
+
+Cuando el usuario realiza una pregunta:
+
+1. Se genera el embedding de la consulta
+2. Se compara con la base vectorial
+3. Se recuperan los fragmentos más relevantes
+4. Dicho contexto se incorpora al prompt
+
+---
+
+### 6) Generación Aumentada
+
+Finalmente, el prompt enriquecido se envía al modelo Gemini, que genera una respuesta guiada usando:
+
+* contexto documental recuperado
+* reglas pedagógicas del tutor
+* enfoque socrático
+
+---
+
+### Arquitectura General
+
+```text
+Documentos PDF/TXT
+      ↓
+Extracción de texto
+      ↓
+Chunking
+      ↓
+Embeddings
+      ↓
+Base Vectorial (ChromaDB)
+      ↓
+Retrieval
+      ↓
+Prompt enriquecido
+      ↓
+Gemini
+      ↓
+Respuesta Socrática
+```
 
 ---
 
 ## Few-Shot Prompting
 
-Se incluyeron ejemplos dentro del prompt para guiar al modelo sobre cómo debe responder.
+Se incluyen ejemplos dentro del prompt para mantener consistencia pedagógica en las respuestas.
 
-Ejemplo incluido en el prompt:
+Ejemplo:
 
-Pregunta:
-¿Qué hace SELECT * FROM clientes?
+**Pregunta**
 
-Respuesta esperada:
+```sql
+SELECT nombre FROM clientes WHERE edad > 18
+```
+
+**Respuesta esperada**
 
 ### Explicación
 
-Imagina una base de datos de una tienda con una tabla llamada clientes.
+Parece que estás intentando filtrar información dentro de una tabla.
 
 ### Preguntas para pensar
 
-* ¿Qué columnas podría tener esa tabla?
-* ¿Qué significa el símbolo * en SQL?
-* ¿Crees que esta consulta devuelve todas las columnas o solo algunas?
+* ¿Qué hace la cláusula WHERE?
+* ¿Qué registros cumplen la condición?
+* ¿La consulta devuelve una columna o varias?
 
-Esto ayuda al modelo a mantener un **estilo consistente en las respuestas**.
+Esto ayuda al modelo a mantener un estilo consistente y educativo.
 
 ---
 
@@ -97,57 +188,84 @@ Esto ayuda al modelo a mantener un **estilo consistente en las respuestas**.
 
 El sistema funciona de la siguiente manera:
 
-1. El usuario ingresa una pregunta en la terminal.
-2. El programa analiza si el mensaje contiene código SQL o una pregunta teórica.
-3. La pregunta se envía al modelo de inteligencia artificial.
-4. El modelo genera una respuesta siguiendo las reglas del tutor socrático.
-5. La respuesta se muestra en la terminal en formato Markdown.
+1. El usuario realiza una pregunta en la terminal.
+2. El sistema analiza la consulta.
+3. Se genera un embedding de la pregunta.
+4. Se consulta la base vectorial local.
+5. Se recupera contexto documental relevante.
+6. Se construye un prompt enriquecido.
+7. Gemini genera una respuesta socrática.
+8. La respuesta se muestra al usuario en formato Markdown.
 
 ---
 
 ## Estructura del Proyecto
 
-```
-taller/
+```text
+Proyecto-IA/
 │
 ├── app.py
+├── rag.py
+├── ingestar_docs.py
 ├── .env
 ├── requirements.txt
 ├── README.md
-└── Evidencias.pdf
+├── Evidencias.pdf
+│
+├── documentos/
+│
+└── vectordb/
 ```
 
 ---
 
 ## Instalación
 
-Instalar las dependencias necesarias:
+Instalar dependencias:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
-Crear un archivo `.env` con la API Key:
+Crear archivo `.env`:
 
-```
+```env
 GEMINI_API_KEY=tu_api_key
 ```
 
 ---
 
+## Construcción de la Base Vectorial
+
+Antes de ejecutar el sistema, se debe construir la base vectorial:
+
+```bash
+python ingestar_docs.py
+```
+
+Este proceso:
+
+* Lee documentos PDF/TXT
+* Extrae texto
+* Crea chunks
+* Genera embeddings
+* Almacena vectores en ChromaDB
+
+---
+
 ## Ejecución del Proyecto
 
-Para ejecutar el asistente:
+Ejecutar:
 
-```
+```bash
 python app.py
 ```
 
-El sistema iniciará un tutor interactivo en la terminal.
+El sistema iniciará un tutor interactivo en consola.
 
-Para finalizar la conversación escribir:
+Para salir:
 
-```
+```text
 salir
 ```
 
@@ -157,18 +275,28 @@ salir
 
 **Pregunta del estudiante**
 
-```
-SELECT * FROM clientes
+```text
+¿Qué es la normalización en bases de datos?
 ```
 
-**Respuesta del tutor**
+**Recuperación RAG**
+
+```text
+[Contexto recuperado por RAG]
+La normalización es un proceso de organización de datos...
+```
+
+**Respuesta del Tutor**
 
 ### Explicación
 
-Imagina que la tabla clientes es como una hoja de cálculo con información de clientes.
+Imagina una biblioteca donde la misma información estuviera escrita en varios libros diferentes; si cambias un dato en uno y olvidas actualizarlo en otro, aparecerían inconsistencias.
+
+La normalización busca justamente evitar redundancia y mantener coherencia.
 
 ### Preguntas para pensar
 
-* ¿Qué significa la palabra SELECT?
-* ¿Qué representa el símbolo * en SQL?
-* ¿Qué datos esperas ver como resultado?
+* ¿Qué problemas podría generar repetir información muchas veces?
+* ¿Cómo ayudaría dividir la información en varias tablas?
+* ¿Qué relación crees que existe entre normalización e integridad de datos?
+

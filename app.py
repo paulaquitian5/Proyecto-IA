@@ -1,12 +1,13 @@
 """
 Tutor Socrático de Bases de Datos
-Proyecto: Asistente experto basado en prompts
+Proyecto: Asistente experto basado en prompts + RAG
 """
 
 import os
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from rag import buscar_contexto
 
 # ==============================
 # CARGAR VARIABLES DE ENTORNO
@@ -37,12 +38,24 @@ de bases de datos guiándolos con preguntas en lugar de dar
 respuestas directas.
 </rol>
 
+<contexto>
+Primero debes analizar el contexto documental recuperado por el sistema RAG.
+
+Usa esa información como base principal de tu respuesta.
+
+Si el contexto no contiene suficiente información,
+puedes complementar con conocimiento general de Bases de Datos,
+manteniendo siempre el enfoque educativo y socrático.
+</contexto>
+
+
 <reglas>
 1. Nunca des la solución completa.
 2. Siempre guía al estudiante con preguntas.
 3. Usa ejemplos del mundo real.
 4. Si el estudiante envía código SQL, analiza posibles errores.
 5. Mantén explicaciones claras y educativas.
+6. Prioriza la información del contexto recuperado.
 </reglas>
 
 <formato_respuesta>
@@ -56,39 +69,9 @@ Explica brevemente el concepto.
 - Pregunta 2
 - Pregunta 3
 </formato_respuesta>
-
-<ejemplos>
-
-Pregunta:
-¿Qué hace SELECT * FROM clientes?
-
-Respuesta:
-
-### Explicación
-Imagina una base de datos de una tienda con una tabla llamada clientes.
-
-### Preguntas para pensar
-- ¿Qué columnas podría tener esa tabla?
-- ¿Qué significa el símbolo * en SQL?
-- ¿Crees que esta consulta devuelve todas las columnas o solo algunas?
-
----
-
-Pregunta:
-SELECT nombre FROM clientes WHERE edad > 18
-
-Respuesta:
-
-### Explicación
-Parece que estás intentando filtrar información dentro de una tabla.
-
-### Preguntas para pensar
-- ¿Qué hace la cláusula WHERE?
-- ¿Qué registros cumplen la condición edad > 18?
-- ¿La consulta devuelve una columna o todas?
-
-</ejemplos>
 """
+
+
 
 # ==============================
 # CONFIGURACIÓN DEL MODELO
@@ -141,8 +124,8 @@ def es_codigo_sql(texto):
 
     texto = texto.lower()
 
-    for p in palabras_sql:
-        if p in texto:
+    for palabra in palabras_sql:
+        if palabra in texto:
             return True
 
     return False
@@ -181,7 +164,7 @@ while True:
         "texto": mensaje
     })
 
-    # Caso 1: Tema fuera de bases de datos
+    # Caso: tema fuera de BD
     if es_tema_fuera_bd(mensaje):
 
         respuesta = """
@@ -193,24 +176,52 @@ Mi enfoque es ayudarte con **Bases de Datos**.
 - Normalización
 - Modelos relacionales
 - Consultas JOIN
+- Optimización de consultas
 ?
 """
 
     else:
 
         try:
+            # ==============================
+            # RECUPERAR CONTEXTO DEL RAG
+            # ==============================
+            contexto = buscar_contexto(mensaje)
+            print("\n[Contexto recuperado por RAG]")
+            print(contexto[:500])
+            print("...\n")
+            
+            # guardar pequeño contexto conversacional
+            ultimo_contexto = ""
 
+            if len(historial) >= 2:
+                ultimo_contexto = f"""
+            CONVERSACIÓN PREVIA:
+            Usuario: {historial[-2]["texto"]}
+            """
+
+            prompt_final = f"""
+            CONTEXTO DOCUMENTAL:
+            {contexto}
+            {ultimo_contexto}
+            
+            PREGUNTA DEL ESTUDIANTE:
+            {mensaje}
+            """
+
+            # ==============================
+            # CONSULTAR GEMINI
+            # ==============================
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 config=configuration,
-                contents=mensaje
+                contents=prompt_final
             )
 
             respuesta = response.text
 
         except Exception as e:
-
-            respuesta = f"Ocurrió un error al consultar Gemini: {e}"
+            respuesta = f"Ocurrió un error al consultar el sistema RAG/Gemini: {e}"
 
     print("\nTutor:\n")
     print(respuesta)
@@ -219,4 +230,5 @@ Mi enfoque es ayudarte con **Bases de Datos**.
     historial.append({
         "rol": "Tutor",
         "texto": respuesta
+
     })

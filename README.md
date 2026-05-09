@@ -156,6 +156,94 @@ Respuesta Socrática
 
 ---
 
+---
+
+## Evaluación del Sistema RAG (RAGAS)
+
+Con el fin de medir objetivamente el desempeño del pipeline RAG implementado, se realizó una evaluación utilizando la librería **RAGAS (Retrieval-Augmented Generation Assessment)**, una herramienta especializada para medir la calidad de sistemas RAG mediante métricas cuantitativas.
+
+### Configuración de la evaluación
+
+| Parámetro | Valor |
+|---|---|
+| Documento(s) | PDFs/TXT sobre SQL, JOINs y Normalización de bases de datos |
+| Modelo de embeddings | SentenceTransformers `all-MiniLM-L6-v2` |
+| chunk_size / overlap | 500 / 50 |
+| k (chunks recuperados) | 3 |
+| LLM generador | Google Gemini 2.5 Flash |
+| LLM juez (RAGAS) | RAGAS Evaluator |
+
+---
+
+### Casos de prueba
+
+Se diseñaron **8 preguntas de evaluación**, distribuidas en cuatro categorías:
+
+**1. Respuesta textual presente en el documento**
+- ¿Qué es una clave primaria?
+- ¿Qué función cumple WHERE en SQL?
+
+**2. Vocabulario distinto al documento (prueba semántica)**
+- ¿Cómo conectar registros entre tablas?
+- ¿Cómo ayudan índices y claves primarias al rendimiento?
+
+**3. Integración de múltiples fragmentos**
+- ¿Cómo evitar duplicar información en una base de datos?
+- ¿Por qué la normalización mejora la integridad de datos?
+
+**4. Preguntas fuera del dominio documental**
+- ¿Quién ganó el mundial 2022?
+- ¿Cuál es el mejor cantante del mundo?
+
+Estas últimas permitieron evaluar la capacidad del sistema para **detectar ausencia de contexto y reducir alucinaciones**.
+
+---
+
+### Métricas utilizadas
+
+Se emplearon tres métricas principales:
+
+**Faithfulness**
+> Evalúa qué tan alineada está la respuesta generada con el contexto recuperado.
+
+**Answer Relevancy**
+> Mide qué tan bien responde la salida a la pregunta del usuario.
+
+**Context Precision**
+> Evalúa si los fragmentos recuperados fueron realmente relevantes para responder.
+
+---
+
+### Resultados
+
+| Métrica | Promedio |
+|---|---:|
+| Faithfulness | **0.786** |
+| Answer Relevancy | **0.409** |
+| Context Precision | **0.414** |
+
+Los resultados muestran un desempeño sólido en **Faithfulness**, indicando que el sistema genera respuestas mayormente sustentadas en el contexto recuperado.
+
+Por otro lado, **Answer Relevancy** y **Context Precision** presentan oportunidades de mejora, principalmente relacionadas con la recuperación semántica y la especificidad de la respuesta generada.
+
+---
+
+### Análisis
+
+A partir de la evaluación realizada se concluye que:
+
+- El sistema presenta **buena fidelidad al contexto**, reduciendo respuestas inventadas.
+- La recuperación documental mediante embeddings funciona adecuadamente en preguntas técnicas.
+- En preguntas fuera del dominio, el sistema mostró un comportamiento relativamente controlado frente a alucinaciones.
+- Existen oportunidades de optimización ajustando:
+  - tamaño de chunk
+  - overlap
+  - valor de k
+  - modelos de embeddings más especializados
+
+Esta evaluación permitió validar experimentalmente la efectividad del pipeline RAG implementado dentro del proyecto.
+
+---
 ## Few-Shot Prompting
 
 Se incluyen ejemplos dentro del prompt para mantener consistencia pedagógica en las respuestas.
@@ -211,6 +299,8 @@ Proyecto-IA/
 ├── requirements.txt
 ├── README.md
 ├── Evidencias.pdf
+├── evaluar_rag_local.py
+├── resultados_ragas.csv
 │
 ├── documentos/
 │

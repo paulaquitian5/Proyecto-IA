@@ -300,7 +300,6 @@ Proyecto-IA/
 ├── README.md
 ├── Evidencias.pdf
 ├── evaluar_rag_local.py
-├── resultados_ragas.csv
 │
 ├── documentos/
 │

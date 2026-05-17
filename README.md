@@ -8,6 +8,8 @@ Código: 506231715
 **Laura Alejandra Barreto Niño**  
 Código: 506222707
 
+**Link Video:** https://youtu.be/eJIop_VzGXk
+
 ---
 
 # Tutor Socrático de Bases de Datos con RAG
